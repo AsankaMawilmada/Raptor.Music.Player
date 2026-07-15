@@ -79,7 +79,7 @@ class _LyricsTabState extends State<LyricsTab> {
           );
         }
         return SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + MediaQuery.paddingOf(context).bottom),
           child: Text(result.plain ?? '', style: const TextStyle(fontSize: 15, height: 1.6)),
         );
       },

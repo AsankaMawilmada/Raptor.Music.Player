@@ -14,11 +14,8 @@ class PlaylistDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final playlistState = context.watch<PlaylistState>();
-    final library = context.watch<LibraryState>();
     final playlist = playlistState.playlists.firstWhere((p) => p.id == playlistId);
     final isFavorites = playlistId == favoritesPlaylistId;
-    final songs = library.byPaths(playlist.songPaths);
-    final playerState = context.read<PlayerState>();
 
     return Scaffold(
       appBar: AppBar(
@@ -45,56 +42,7 @@ class PlaylistDetailScreen extends StatelessWidget {
         onPressed: () => showAddToPlaylistFallback(context, playlist.id),
         child: const Icon(Icons.add),
       ),
-      body: songs.isEmpty
-          ? const Center(child: Text('No songs yet. Tap + to add some.'))
-          : Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                  child: Row(
-                    children: [
-                      Expanded(child: Text('${songs.length} songs')),
-                      TextButton.icon(
-                        icon: const Icon(Icons.play_arrow),
-                        label: const Text('Play'),
-                        onPressed: () => playerState.playQueue(songs, sourceLabel: playlist.name),
-                      ),
-                      TextButton.icon(
-                        icon: const Icon(Icons.shuffle),
-                        label: const Text('Shuffle'),
-                        onPressed: () =>
-                            playerState.playQueue(songs, sourceLabel: playlist.name, shuffle: true),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: ReorderableListView.builder(
-                    itemCount: songs.length,
-                    onReorder: (oldIndex, newIndex) =>
-                        playlistState.reorder(playlist.id, oldIndex, newIndex),
-                    itemBuilder: (context, index) {
-                      final song = songs[index];
-                      return Dismissible(
-                        key: ValueKey(song.data),
-                        direction: DismissDirection.endToStart,
-                        background: Container(
-                          color: Theme.of(context).colorScheme.errorContainer,
-                          alignment: Alignment.centerRight,
-                          padding: const EdgeInsets.only(right: 24),
-                          child: const Icon(Icons.delete),
-                        ),
-                        onDismissed: (_) => playlistState.removeSongAt(playlist.id, index),
-                        child: SongTile(
-                          song: song,
-                          onTap: () => playerState.playQueue(songs, startIndex: index, sourceLabel: playlist.name),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
+      body: PlaylistSongsView(playlistId: playlistId),
     );
   }
 
@@ -117,6 +65,74 @@ class PlaylistDetailScreen extends StatelessWidget {
     if (newName != null && newName.isNotEmpty && context.mounted) {
       await context.read<PlaylistState>().renamePlaylist(id, newName);
     }
+  }
+}
+
+/// Scrollable song list + play/shuffle header for a playlist, shared by
+/// [PlaylistDetailScreen] and the Favorites bottom-nav destination (which
+/// embeds this directly instead of pushing its own Scaffold/AppBar).
+class PlaylistSongsView extends StatelessWidget {
+  final String playlistId;
+  const PlaylistSongsView({super.key, required this.playlistId});
+
+  @override
+  Widget build(BuildContext context) {
+    final playlistState = context.watch<PlaylistState>();
+    final library = context.watch<LibraryState>();
+    final playlist = playlistState.playlists.firstWhere((p) => p.id == playlistId);
+    final songs = library.byPaths(playlist.songPaths);
+    final playerState = context.read<PlayerState>();
+
+    if (songs.isEmpty) {
+      return const Center(child: Text('No songs yet. Tap + to add some.'));
+    }
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+          child: Row(
+            children: [
+              Expanded(child: Text('${songs.length} songs')),
+              TextButton.icon(
+                icon: const Icon(Icons.play_arrow),
+                label: const Text('Play'),
+                onPressed: () => playerState.playQueue(songs, sourceLabel: playlist.name),
+              ),
+              TextButton.icon(
+                icon: const Icon(Icons.shuffle),
+                label: const Text('Shuffle'),
+                onPressed: () => playerState.playQueue(songs, sourceLabel: playlist.name, shuffle: true),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: ReorderableListView.builder(
+            itemCount: songs.length,
+            onReorder: (oldIndex, newIndex) => playlistState.reorder(playlist.id, oldIndex, newIndex),
+            itemBuilder: (context, index) {
+              final song = songs[index];
+              return Dismissible(
+                key: ValueKey(song.data),
+                direction: DismissDirection.endToStart,
+                background: Container(
+                  color: Theme.of(context).colorScheme.errorContainer,
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.only(right: 24),
+                  child: const Icon(Icons.delete),
+                ),
+                onDismissed: (_) => playlistState.removeSongAt(playlist.id, index),
+                child: SongTile(
+                  song: song,
+                  onTap: () => playerState.playQueue(songs, startIndex: index, sourceLabel: playlist.name),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
   }
 }
 

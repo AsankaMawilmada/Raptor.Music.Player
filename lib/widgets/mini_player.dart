@@ -4,10 +4,13 @@ import 'package:provider/provider.dart';
 
 import '../screens/now_playing/now_playing_screen.dart';
 import '../state/player_state.dart';
+import '../theme/app_theme.dart';
 import 'artwork.dart';
+import 'glass_container.dart';
+import 'gradient_seek_bar.dart';
 
-/// Docked bar shown above the tab content whenever something is loaded,
-/// mirroring Samsung Music's persistent mini-player.
+/// Floating glass mini-player docked above the bottom nav bar, mirroring
+/// the Lumina Audio design system's "glass-player" component.
 class MiniPlayer extends StatelessWidget {
   const MiniPlayer({super.key});
 
@@ -18,63 +21,35 @@ class MiniPlayer extends StatelessWidget {
     if (song == null) return const SizedBox.shrink();
     final scheme = Theme.of(context).colorScheme;
 
-    return GestureDetector(
-      onTap: () => Navigator.of(context).push(
-        PageRouteBuilder(
-          pageBuilder: (_, _, _) => const NowPlayingScreen(),
-          transitionsBuilder: (_, animation, _, child) => SlideTransition(
-            position: Tween(
-              begin: const Offset(0, 1),
-              end: Offset.zero,
-            ).animate(animation),
-            child: child,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
+      child: GestureDetector(
+        onTap: () => Navigator.of(context).push(
+          PageRouteBuilder(
+            pageBuilder: (_, _, _) => const NowPlayingScreen(),
+            transitionsBuilder: (_, animation, _, child) => SlideTransition(
+              position: Tween(
+                begin: const Offset(0, 1),
+                end: Offset.zero,
+              ).animate(animation),
+              child: child,
+            ),
           ),
         ),
-      ),
-      child: Container(
-        decoration: BoxDecoration(
-          color: scheme.surfaceContainerHigh,
+        child: GlassContainer(
+          borderRadius: BorderRadius.circular(AppRadii.dflt),
           boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.15),
-              blurRadius: 6,
-              offset: const Offset(0, -1),
-            ),
+            BoxShadow(color: Colors.black.withValues(alpha: 0.12), blurRadius: 16, offset: const Offset(0, 4)),
           ],
-        ),
-        child: SafeArea(
-          top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              StreamBuilder<Duration>(
-                stream: playerState.positionStream,
-                builder: (context, snapshot) {
-                  final position = snapshot.data ?? Duration.zero;
-                  final duration = playerState.duration;
-                  final progress = duration.inMilliseconds == 0
-                      ? 0.0
-                      : (position.inMilliseconds / duration.inMilliseconds)
-                            .clamp(0.0, 1.0);
-                  return LinearProgressIndicator(
-                    value: progress,
-                    minHeight: 2,
-                    backgroundColor: scheme.surfaceContainerHighest,
-                    valueColor: AlwaysStoppedAnimation(scheme.primary),
-                  );
-                },
-              ),
-              SizedBox(
-                height: 60,
-                child: Row(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
                   children: [
-                    const SizedBox(width: 8),
-                    Artwork(
-                      id: song.albumId,
-                      type: ArtworkType.ALBUM,
-                      size: 44,
-                    ),
-                    const SizedBox(width: 12),
+                    Artwork(id: song.albumId, type: ArtworkType.ALBUM, size: 44, radius: AppRadii.sm),
+                    const SizedBox(width: AppSpacing.elementGap),
                     Expanded(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -84,16 +59,16 @@ class MiniPlayer extends StatelessWidget {
                             song.title,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontWeight: FontWeight.w600),
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: scheme.onSurface,
+                                ),
                           ),
                           Text(
                             song.artist,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: scheme.onSurfaceVariant,
-                              fontSize: 12,
-                            ),
+                            style: Theme.of(context).textTheme.labelSmall,
                           ),
                         ],
                       ),
@@ -102,24 +77,39 @@ class MiniPlayer extends StatelessWidget {
                       icon: const Icon(Icons.skip_previous_rounded),
                       onPressed: playerState.skipPrevious,
                     ),
-                    IconButton(
-                      iconSize: 32,
-                      icon: Icon(
-                        playerState.isPlaying
-                            ? Icons.pause_circle_filled
-                            : Icons.play_circle_fill,
+                    Container(
+                      decoration: const BoxDecoration(
+                        gradient: AppGradients.vibrant,
+                        shape: BoxShape.circle,
                       ),
-                      onPressed: playerState.togglePlayPause,
+                      child: IconButton(
+                        iconSize: 22,
+                        color: Colors.white,
+                        icon: Icon(
+                          playerState.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                        ),
+                        onPressed: playerState.togglePlayPause,
+                      ),
                     ),
                     IconButton(
                       icon: const Icon(Icons.skip_next_rounded),
                       onPressed: playerState.skipNext,
                     ),
-                    const SizedBox(width: 4),
                   ],
                 ),
-              ),
-            ],
+                StreamBuilder<Duration>(
+                  stream: playerState.positionStream,
+                  builder: (context, snapshot) {
+                    final position = snapshot.data ?? Duration.zero;
+                    final duration = playerState.duration;
+                    final progress = duration.inMilliseconds == 0
+                        ? 0.0
+                        : (position.inMilliseconds / duration.inMilliseconds).clamp(0.0, 1.0);
+                    return GradientSeekBar(value: progress, trackHeight: 3, showHandle: false);
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ),

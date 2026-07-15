@@ -1,6 +1,6 @@
-# raptor_player
+# Lyd Sonic Audio Player
 
-A new Flutter project.
+A local music player Flutter application.
 
 ## Getting Started
 

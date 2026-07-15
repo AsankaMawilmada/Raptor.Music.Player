@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 
 import '../models/song.dart';
 import '../services/artwork_cache_service.dart';
+import '../services/recent_plays_service.dart';
 import '../services/sleep_timer_service.dart';
 
 enum RepeatMode { off, all, one }
@@ -14,6 +17,7 @@ enum RepeatMode { off, all, one }
 class PlayerState extends ChangeNotifier {
   final ArtworkCacheService artworkCache;
   final SleepTimerService sleepTimer;
+  final RecentPlaysService recentPlays;
 
   late final AndroidEqualizer equalizer;
   late final AudioPlayer player;
@@ -23,7 +27,7 @@ class PlayerState extends ChangeNotifier {
   String? _queueSourceLabel;
   int? _lastIndex;
 
-  PlayerState({required this.artworkCache, required this.sleepTimer}) {
+  PlayerState({required this.artworkCache, required this.sleepTimer, required this.recentPlays}) {
     equalizer = AndroidEqualizer();
     player = AudioPlayer(
       audioPipeline: AudioPipeline(androidAudioEffects: [equalizer]),
@@ -93,6 +97,10 @@ class PlayerState extends ChangeNotifier {
     _hasQueue = true;
     if (shuffle) await player.shuffle();
     await player.play();
+    final playing = currentSong;
+    if (playing != null) {
+      unawaited(recentPlays.recordPlay(playing));
+    }
     notifyListeners();
   }
 

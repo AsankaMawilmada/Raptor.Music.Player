@@ -37,22 +37,26 @@ class SongTile extends StatelessWidget {
     final isCurrent = playerState.currentSong?.data == song.data;
     final scheme = Theme.of(context).colorScheme;
 
+    final textTheme = Theme.of(context).textTheme;
+
     return ListTile(
       onTap: onTap,
-      leading: Artwork(id: song.albumId, type: ArtworkType.ALBUM, size: 48),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      leading: Artwork(id: song.albumId, type: ArtworkType.ALBUM, size: 48, radius: 12),
       title: Text(
         song.title,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: TextStyle(
+        style: textTheme.titleMedium?.copyWith(
           color: isCurrent ? scheme.primary : null,
-          fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w500,
         ),
       ),
       subtitle: Text(
         showAlbum ? '${song.artist} • ${song.album}' : song.artist,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
+        style: textTheme.bodyMedium,
       ),
       trailing: IconButton(
         icon: const Icon(Icons.more_vert),

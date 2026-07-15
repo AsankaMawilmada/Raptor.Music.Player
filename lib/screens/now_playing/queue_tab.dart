@@ -17,6 +17,7 @@ class QueueTab extends StatelessWidget {
     if (queue.isEmpty) return const Center(child: Text('Queue is empty'));
 
     return ReorderableListView.builder(
+      padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom),
       itemCount: queue.length,
       onReorder: (oldIndex, newIndex) => playerState.reorderQueue(oldIndex, newIndex),
       itemBuilder: (context, index) {

@@ -14,7 +14,7 @@ class Artwork extends StatelessWidget {
     required this.id,
     this.type = ArtworkType.AUDIO,
     this.size = 48,
-    this.radius = 8,
+    this.radius = 12,
   });
 
   @override

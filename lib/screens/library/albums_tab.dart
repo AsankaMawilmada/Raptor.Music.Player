@@ -3,6 +3,7 @@ import 'package:on_audio_query/on_audio_query.dart' show ArtworkType;
 import 'package:provider/provider.dart';
 
 import '../../state/library_state.dart';
+import '../../theme/app_theme.dart';
 import '../../widgets/artwork.dart';
 import 'album_detail_screen.dart';
 
@@ -28,7 +29,7 @@ class AlbumsTab extends StatelessWidget {
       itemBuilder: (context, index) {
         final album = albums[index];
         return InkWell(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadii.dflt),
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => AlbumDetailScreen(albumId: album.id, albumName: album.album)),
           ),
@@ -42,16 +43,15 @@ class AlbumsTab extends StatelessWidget {
                     id: album.id,
                     type: ArtworkType.ALBUM,
                     size: constraints.maxWidth,
-                    radius: 12,
+                    radius: AppRadii.dflt,
                   ),
                 ),
               ),
-              const SizedBox(height: 6),
-              Text(album.album, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600)),
+              const SizedBox(height: AppSpacing.unit),
+              Text(album.album,
+                  maxLines: 1, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.titleMedium),
               Text(album.artist ?? 'Unknown artist',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12)),
+                  maxLines: 1, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.labelSmall),
             ],
           ),
         );

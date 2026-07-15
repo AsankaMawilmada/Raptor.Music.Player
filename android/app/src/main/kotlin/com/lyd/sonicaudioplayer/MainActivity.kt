@@ -1,4 +1,4 @@
-package com.raptor.raptor_player
+package com.lyd.sonicaudioplayer
 
 import com.ryanheise.audioservice.AudioServiceActivity
 

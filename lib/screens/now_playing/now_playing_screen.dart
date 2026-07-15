@@ -5,7 +5,9 @@ import 'package:palette_generator/palette_generator.dart';
 import 'package:provider/provider.dart';
 
 import '../../services/artwork_cache_service.dart';
+import '../../state/app_nav_state.dart';
 import '../../state/player_state.dart';
+import '../../widgets/app_bottom_nav.dart';
 import '../playlists/add_to_playlist_sheet.dart';
 import '../settings/equalizer_screen.dart';
 import '../settings/sleep_timer_sheet.dart';
@@ -67,6 +69,7 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
             ),
           ),
           child: SafeArea(
+            bottom: false,
             child: Column(
               children: [
                 Row(
@@ -76,15 +79,19 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                     Expanded(
-                      child: Column(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          const Text('Playing from', style: TextStyle(fontSize: 11)),
-                          Text(
-                            playerState.queueSourceLabel ?? 'Library',
-                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                          for (var i = 0; i < appNavDestinations.length; i++)
+                            IconButton(
+                              icon: Icon(appNavDestinations[i].icon),
+                              tooltip: appNavDestinations[i].label,
+                              color: scheme.onSurfaceVariant,
+                              onPressed: () {
+                                context.read<AppNavState>().setIndex(i);
+                                Navigator.of(context).pop();
+                              },
+                            ),
                         ],
                       ),
                     ),
@@ -98,11 +105,11 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
                     ),
                   ],
                 ),
-                const TabBar(tabs: [
+                TabBar(tabs: const [
                   Tab(text: 'Player'),
                   Tab(text: 'Lyrics'),
                   Tab(text: 'Up next'),
-                ]),
+                ], labelStyle: Theme.of(context).textTheme.labelMedium),
                 Expanded(
                   child: TabBarView(
                     children: [
